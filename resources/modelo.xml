@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<transacao versao="1.0.0" id="">
+	<!-- Id Encode MD5 ID da transação time stamp formato 2016/11/30 18:31:15-->
+	<dados-transacao>
+		<finalidade>CADIN</finalidade>
+		<!-- 
+		FINALIDADES
+		POSSIVEIS	
+		CADIN	
+		TRABALHISTA	
+		FEDERAIS	
+		FGTS	
+		CNPJ	-->
+		<usr>protheus</usr>
+		<hash>md5('ERPspt01!')</hash>
+	</dados-transacao>
+	<dados-fornecedor>
+		<cnpj>62002886000160</cnpj>
+		<cpf>
+			<!---->
+		</cpf>
+		<ccm>
+			<!---->
+		</ccm>
+		<razao>SAO PAULO TURISMO S/A.</razao>
+	</dados-fornecedor>
+</transacao>

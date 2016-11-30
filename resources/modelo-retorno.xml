@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<retorno versao="1.0.0">
+	<dados-retorno>
+		<finalidade>cadin</finalidade>
+		<id>iddatransacao</id>
+		<status><!----></status>
+		<!--
+		error
+		site		
+		-->
+		<mensagem>mensagem de retorno de erro</mensagem>
+		<url>url de redirecionamento</url>
+	</dados-retorno>
+</retorno>
