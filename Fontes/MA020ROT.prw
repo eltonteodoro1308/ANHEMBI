@@ -1,15 +1,21 @@
 #INCLUDE 'TOTVS.CH'
+#DEFINE cEnter Chr(13) + Chr(10)
 
 User Function MA020ROT()
 
 	Local aRet := {}
 
-	aAdd( aRet, { 'Cons. CADIN'  , 'U_CADIN'  , 0, 6 } ) 
-	aadd( aRet, { 'Cons. Interna', 'U_INTERNA', 0, 6 } ) 
+	aAdd( aRet, { 'Consulta CADIN'  ,;
+	 'MsgRun( CapitalAce("Consulta Solicitada, Aguardando Resposta..."), CapitalAce("Atenção !!!"), { || U_CNSCADIN() } )'  , 0, 6 } ) 
+
+	aadd( aRet, { 'Consulta PGFN', 'U_CNSSITE( "http://www.receita.fazenda.gov.br/Aplicacoes/ATSPO/Certidao/CndConjuntaInter/InformaNICertidao.asp?tipo=1" )', 0, 6 } ) 
+	aadd( aRet, { 'Consulta FGTS', 'U_CNSSITE( "https://www.sifge.caixa.gov.br/Cidadao/Crf/FgeCfSCriteriosPesquisa.asp" )', 0, 6 } ) 
+	aadd( aRet, { 'Consulta Receita Federal', 'U_CNSSITE( "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao.asp" )', 0, 6 } ) 
+	aadd( aRet, { 'Consulta CADIN Municipal', 'U_CNSSITE( "http://www3.prefeitura.sp.gov.br/cadin/Pesq_Deb.aspx" )', 0, 6 } ) 
 
 Return aRet
 
-User Function Cadin()
+User Function CnsCadin()
 
 	Local oJson       := TJsonParser():New()
 	Local cUrl        := 'http://sfmobile.prefeitura.sp.gov.br/api/Cadin/GetDebitosCadin?'
@@ -25,6 +31,7 @@ User Function Cadin()
 	Local nX          := 0
 	Local cNumPend    := ''
 	Local cOrgao      := '' 
+	Local cData       := ''
 
 	If SA2->A2_TIPO == 'F'
 
@@ -60,6 +67,20 @@ User Function Cadin()
 		ApMsgStop( 'Problemas no retorno da Consulta.', 'Atenção !!!' )
 
 	Else
+
+		RecLock( 'SA2', .F. )
+
+		cData += PadL( cValToChar( Day( Date() ) ), 2, '0' ) + '/'
+		cData += PadL( cValToChar( Month( Date() ) ), 2, '0' ) + '/'
+		cData += cValToChar( Year( Date() ) )
+
+		SA2->A2_XSITLOG := 'CADIN: ' + If( aJsonFields[1][2][1][2] != 0, 'Sem Pendências', 'Com Pendências' ) + cEnter +;
+		'Usuário: ' + SubStr( cUsuario, 7, 15 ) + cEnter +;
+		'Data/Hora: ' + cData + ' - ' + Time()  + cEnter +;
+		Padc('',35,'-')  + cEnter +;
+		SA2->A2_XSITLOG
+
+		MsUnlock()
 
 		If aJsonFields[1][2][1][2] != 0
 
@@ -109,11 +130,11 @@ User Function Cadin()
 
 Return
 
-User Function Interna()
+User Function CnsSite( cUrl )
 
 	Local oSize       := FwDefSize():New(.T.)
 	Local oDlg        := Nil
-	Local cUrl        := 'http://spturis.com/v7/'
+	Local oTiBrowser  := Nil
 
 	oSize:AddObject( 'BROWSER', 000, 000, .T., .T. )
 
@@ -121,14 +142,15 @@ User Function Interna()
 
 	DEFINE DIALOG oDlg TITLE cUrl FROM oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
 
-	TIBrowser():New(;
+	oTiBrowser := TIBrowser():New(;
 	oSize:GetDimension('BROWSER','LININI'),;
 	oSize:GetDimension('BROWSER','COLINI'),;
 	oSize:GetDimension('BROWSER','COLEND'),;
 	oSize:GetDimension('BROWSER','LINEND'),;
 	cUrl,oDlg )
 
-	EnchoiceBar( oDlg, {||Nil}, {||oDlg:End()},,,,,.F.,.F.,.F.,.F.,.F. )
+	EnchoiceBar( oDlg, {||Nil}, {||oDlg:End()},,{ {'',{|| oTiBrowser:Navigate( cURL ) },'Abrir a Página Inicial'}, {'',{|| oTiBrowser:Print()},'Imprimir' } };
+	,,,.F.,.F.,.T.,.F.,.F. )
 
 	ACTIVATE DIALOG oDlg CENTERED
 
