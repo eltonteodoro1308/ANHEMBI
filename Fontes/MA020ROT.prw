@@ -15,13 +15,16 @@ User Function MA020ROT()
 	aAdd( aRet, {а'Consulta CADIN'  ,;
 	а'MsgRun( CapitalAce("Consulta Solicitada, Aguardando Resposta..."), CapitalAce("Atenчуo !!!"), { || U_CNSCADIN() } )'  ,а0,а6 } )а
 
+	aadd( aRet, {а'Consulta TST',;
+	'U_CNSSITE( "http://www.tst.jus.br/certidao/" )',а0,а6 } )а
+
 	aadd( aRet, {а'Consulta PGFN',;
 	а'U_CNSSITE( "http://www.receita.fazenda.gov.br/Aplicacoes/ATSPO/Certidao/CndConjuntaInter/InformaNICertidao.asp?tipo=1" )',а0,а6 } )а
 
 	aadd( aRet, {а'Consulta FGTS',;
 	а'U_CNSSITE( "https://www.sifge.caixa.gov.br/Cidadao/Crf/FgeCfSCriteriosPesquisa.asp" )',а0,а6 } )а
 
-	aadd( aRet, {а'Consulta Receita Federal',;
+	aadd( aRet, {а'Consulta CNPJ',;
 	а'U_CNSSITE( "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao.asp" )',а0,а6 } )а
 
 	aadd( aRet, {а'Consulta CADIN Municipal',;
