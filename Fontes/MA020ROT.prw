@@ -1,6 +1,13 @@
 #INCLUDE 'TOTVS.CH'
 #DEFINE cEnter Chr(13) + Chr(10)
 
+/*/{Protheus.doc} MA020ROT
+//Ponto de Entrada que inclui rotina no aRotina do cadastro de Fornecerdores (MATA020)
+@author Elton Teodoro Alves
+@since 01/12/2016
+@version 12.1.007 
+@return Array, Array com as definições das rotinas a serem incluidas 
+/*/
 User Function MA020ROT()
 
 	Local aRet := {}
@@ -8,13 +15,26 @@ User Function MA020ROT()
 	aAdd( aRet, { 'Consulta CADIN'  ,;
 	 'MsgRun( CapitalAce("Consulta Solicitada, Aguardando Resposta..."), CapitalAce("Atenção !!!"), { || U_CNSCADIN() } )'  , 0, 6 } ) 
 
-	aadd( aRet, { 'Consulta PGFN', 'U_CNSSITE( "http://www.receita.fazenda.gov.br/Aplicacoes/ATSPO/Certidao/CndConjuntaInter/InformaNICertidao.asp?tipo=1" )', 0, 6 } ) 
-	aadd( aRet, { 'Consulta FGTS', 'U_CNSSITE( "https://www.sifge.caixa.gov.br/Cidadao/Crf/FgeCfSCriteriosPesquisa.asp" )', 0, 6 } ) 
-	aadd( aRet, { 'Consulta Receita Federal', 'U_CNSSITE( "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao.asp" )', 0, 6 } ) 
-	aadd( aRet, { 'Consulta CADIN Municipal', 'U_CNSSITE( "http://www3.prefeitura.sp.gov.br/cadin/Pesq_Deb.aspx" )', 0, 6 } ) 
+	aadd( aRet, { 'Consulta PGFN',;
+	 'U_CNSSITE( "http://www.receita.fazenda.gov.br/Aplicacoes/ATSPO/Certidao/CndConjuntaInter/InformaNICertidao.asp?tipo=1" )', 0, 6 } ) 
+
+	aadd( aRet, { 'Consulta FGTS',;
+	 'U_CNSSITE( "https://www.sifge.caixa.gov.br/Cidadao/Crf/FgeCfSCriteriosPesquisa.asp" )', 0, 6 } ) 
+
+	aadd( aRet, { 'Consulta Receita Federal',;
+	 'U_CNSSITE( "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao.asp" )', 0, 6 } ) 
+
+	aadd( aRet, { 'Consulta CADIN Municipal',;
+	 'U_CNSSITE( "http://www3.prefeitura.sp.gov.br/cadin/Pesq_Deb.aspx" )', 0, 6 } ) 
 
 Return aRet
 
+/*/{Protheus.doc} CnsCadin
+//User Function que executa a consulta na API do CADIN da situação de fornecedor e grava o LOG 
+@author Elton Teodoro Alves
+@since 01/12/2016
+@version 12.1.007
+/*/
 User Function CnsCadin()
 
 	Local oJson       := TJsonParser():New()
@@ -103,7 +123,8 @@ User Function CnsCadin()
 
 				oSize:Process()
 
-				DEFINE DIALOG oDlg TITLE aJsonFields[1][2][3][2] FROM oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
+				DEFINE DIALOG oDlg TITLE aJsonFields[1][2][3][2] FROM;
+				oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
 
 				@oSize:GetDimension("LISTA","LININI"), oSize:GetDimension("LISTA","COLINI");
 				LISTBOX oList Fields HEADER '';
@@ -130,6 +151,13 @@ User Function CnsCadin()
 
 Return
 
+/*/{Protheus.doc} CnsSite
+//Exibe portal da URL enviada por parêmetro
+@author Elton Teodoro Alves
+@since 01/12/2016
+@version 12.1.007
+@param cUrl, Caracter, URL do portal a ser carregado no Browser
+/*/
 User Function CnsSite( cUrl )
 
 	Local oSize       := FwDefSize():New(.T.)
@@ -140,7 +168,8 @@ User Function CnsSite( cUrl )
 
 	oSize:Process()
 
-	DEFINE DIALOG oDlg TITLE cUrl FROM oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
+	DEFINE DIALOG oDlg TITLE cUrl FROM;
+	oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
 
 	oTiBrowser := TIBrowser():New(;
 	oSize:GetDimension('BROWSER','LININI'),;
@@ -149,7 +178,8 @@ User Function CnsSite( cUrl )
 	oSize:GetDimension('BROWSER','LINEND'),;
 	cUrl,oDlg )
 
-	EnchoiceBar( oDlg, {||Nil}, {||oDlg:End()},,{ {'',{|| oTiBrowser:Navigate( cURL ) },'Abrir a Página Inicial'}, {'',{|| oTiBrowser:Print()},'Imprimir' } };
+	EnchoiceBar( oDlg, {||Nil}, {||oDlg:End()},,{ {'',{|| oTiBrowser:Navigate( cURL ) },;
+	'Abrir a Página Inicial'}, {'',{|| oTiBrowser:Print()},'Imprimir' } };
 	,,,.F.,.F.,.T.,.F.,.F. )
 
 	ACTIVATE DIALOG oDlg CENTERED
