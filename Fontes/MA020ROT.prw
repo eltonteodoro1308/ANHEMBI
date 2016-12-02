@@ -5,30 +5,51 @@
 //Ponto de Entrada que inclui rotina no aRotina do cadastro de Fornecerdores (MATA020)
 @author Elton Teodoro Alves
 @since 01/12/2016
-@version 12.1.007 
+@version 12.1.006
 @return Array, Array com as definições das rotinas a serem incluidas 
 /*/
 User Function MA020ROT()
 
-	Local aRet := {}
+	Local aRet       := {}
+	Local aConsultas := {}
 
-	aAdd( aRet, { 'Consulta CADIN'  ,;
+	aAdd( aConsultas, { 'CADIN'  ,;
 	 'MsgRun( CapitalAce("Consulta Solicitada, Aguardando Resposta..."), CapitalAce("Atenção !!!"), { || U_CNSCADIN() } )'  , 0, 6 } ) 
 
-	aadd( aRet, { 'Consulta TST',;
+	/*
+	aAdd( aConsultas, { 'CADIN Municipal',;
+	 'U_CNSSITE( "http://www3.prefeitura.sp.gov.br/cadin/Pesq_Deb.aspx" )', 0, 6 } ) 
+
+	aAdd( aConsultas, { 'TRABALHISTA',;
 	'U_CNSSITE( "http://www.tst.jus.br/certidao/" )', 0, 6 } ) 
 
-	aadd( aRet, { 'Consulta PGFN',;
+	aAdd( aConsultas, { 'FEDERAIS',;
 	 'U_CNSSITE( "http://www.receita.fazenda.gov.br/Aplicacoes/ATSPO/Certidao/CndConjuntaInter/InformaNICertidao.asp?tipo=1" )', 0, 6 } ) 
 
-	aadd( aRet, { 'Consulta FGTS',;
+	aAdd( aConsultas, { 'FGTS',;
 	 'U_CNSSITE( "https://www.sifge.caixa.gov.br/Cidadao/Crf/FgeCfSCriteriosPesquisa.asp" )', 0, 6 } ) 
 
-	aadd( aRet, { 'Consulta CNPJ',;
+	aAdd( aConsultas, { 'CNPJ',;
 	 'U_CNSSITE( "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao.asp" )', 0, 6 } ) 
 
-	aadd( aRet, { 'Consulta CADIN Municipal',;
-	 'U_CNSSITE( "http://www3.prefeitura.sp.gov.br/cadin/Pesq_Deb.aspx" )', 0, 6 } ) 
+	*/
+
+	//	aAdd( aConsultas, { 'CADIN Municipal',;
+	//	 'U_CNSCERT( "CADIN" )', 0, 6 } ) 
+
+	aAdd( aConsultas, { 'TRABALHISTA',;
+	'U_CNSCERT( "TRABALHISTA" )', 0, 6 } ) 
+
+	aAdd( aConsultas, { 'FEDERAIS',;
+	 'U_CNSCERT( "FEDERAIS" )', 0, 6 } ) 
+
+	aAdd( aConsultas, { 'FGTS',;
+	 'U_CNSCERT( "FGTS" )', 0, 6 } ) 
+
+	aAdd( aConsultas, { 'CNPJ',;
+	 'U_CNSCERT( "CNPJ" )', 0, 6 } ) 
+
+	aAdd( aRet, { 'Consultas Pendências',  aConsultas , 0, 6 } )
 
 Return aRet
 
@@ -36,7 +57,7 @@ Return aRet
 //User Function que executa a consulta na API do CADIN da situação de fornecedor e grava o LOG 
 @author Elton Teodoro Alves
 @since 01/12/2016
-@version 12.1.007
+@version 12.1.006
 /*/
 User Function CnsCadin()
 
@@ -155,10 +176,10 @@ User Function CnsCadin()
 Return
 
 /*/{Protheus.doc} CnsSite
-//Exibe portal da URL enviada por parêmetro
+//Exibe portal da URL enviada por parâmetro
 @author Elton Teodoro Alves
 @since 01/12/2016
-@version 12.1.007
+@version 12.1.006
 @param cUrl, Caracter, URL do portal a ser carregado no Browser
 /*/
 User Function CnsSite( cUrl )
@@ -186,5 +207,91 @@ User Function CnsSite( cUrl )
 	,,,.F.,.F.,.T.,.F.,.F. )
 
 	ACTIVATE DIALOG oDlg CENTERED
+
+Return
+
+/*/{Protheus.doc} CnsCert
+//Solicita ao portal interno a certidão identificada por parâmetro.
+@author Elton Teodoro Alves
+@since 02/12/2016
+@version 12.1.006
+@param cTipo, characters, descricao
+/*/
+User Function CnsCert( cTipo )
+
+	Local cXmlRem   := ''
+	Local cXmlRet   := ''
+	Local cCNPJ     := ''
+	Local cCPF      := ''
+	Local cDateTime := ''
+	Local oXml      := TXmlManager():New()
+	Local cUrl      := 'http://intranet.spturis.com.br/api/certidoes/A02516.php'
+
+	If SA2->A2_TIPO == 'F'
+
+		cCPF := SA2->A2_CGC
+
+	ElseIf SA2->A2_TIPO == 'J'
+
+		cCNPJ := SA2->A2_CGC
+
+	Else
+
+		ApMsgStop( 'Rotina válida apenas para fornecedores do Tipo Físico ou Jurídico.', 'Atenção !!!' )
+
+		Return
+
+	End If
+
+	If EmPty( SA2->A2_CGC )
+
+		ApMsgStop( 'CNPJ ou CPF não preenchido.', 'Atenção !!!' )
+
+		Return
+
+	End If
+
+	cDateTime += cValToChar( Year ( Date() ) ) + '/'
+	cDateTime += PadL( cValToChar( Month( Date() ) ), 2, '0' ) + '/'
+	cDateTime += PadL( cValToChar( Day  ( Date() ) ), 2, '0' ) + ' '
+	cDateTime += Time() 
+
+	cXmlRem += '<transacao id="' + MD5( cDateTime, 2) + '" versao="1.0.0">'
+	cXmlRem += '<dadostransacao>'
+	cXmlRem += '<finalidade>' + cTipo + '</finalidade>'
+	cXmlRem += '<usr>' + AllTrim( GetNewPar( 'MV_CERTUSR', '' ) ) + '</usr>'
+	cXmlRem += '<hash>' + MD5( AllTrim( GetNewPar( 'MV_CERTPSW', '' ) ), 2 ) + '</hash>'
+	cXmlRem += '</dadostransacao>'
+	cXmlRem += '<dadosfornecedor>'
+	cXmlRem += '<cnpj>' + cCNPJ + '</cnpj>'
+	cXmlRem += '<cpf>' + cCPF + '</cpf>'
+	cXmlRem += '<ccm>' + '' + '</ccm>'
+	cXmlRem += '<razao>' + SA2->A2_NOME + '</razao>'
+	cXmlRem += '</dadosfornecedor>'
+	cXmlRem += '</transacao>'
+
+	cXmlRet := DecodeUTF8( HttpPost( cUrl,, 'params='+cXmlRem ) )
+
+	If ! oXml:Parse( cXmlRet )
+
+		ApMsgStop( 'Não foi possível fazer interpretar o retorno da consulta.', 'Atenção !!!' )
+
+		Return
+
+	End If
+
+	If oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) == 'site'
+
+		U_CnsSite( oXml:XPathGetNodeValue( '/retorno/dadosretorno/url', .F. ) )
+
+	ElseIf oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) == 'erro'
+
+		ApMsgStop( oXml:XPathGetNodeValue( '/retorno/dadosretorno/mensagem' ), 'Atenção !!!' )
+
+	ElseIF oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) == '' // Retorno Pendencias
+
+		// Executar aqui ações para o retorno da consulta    
+
+	End If
 
 Return
