@@ -226,6 +226,11 @@ User Function CnsCert( cTipo )
 	Local cDateTime := ''
 	Local oXml      := TXmlManager():New()
 	Local cUrl      := 'http://intranet.spturis.com.br/api/certidoes/A02516.php'
+	Local cData     := ''
+	Local oDlg      := Nil
+	Local oList     := Nil
+	Local aList     := Nil
+	Local oSize     := FwDefSize():New(.T.)
 
 	If SA2->A2_TIPO == 'F'
 
@@ -274,11 +279,26 @@ User Function CnsCert( cTipo )
 
 	If ! oXml:Parse( cXmlRet )
 
-		ApMsgStop( 'Não foi possível fazer interpretar o retorno da consulta.', 'Atenção !!!' )
+		ApMsgStop( 'Não foi possível interpretar o retorno da consulta.', 'Atenção !!!' )
 
 		Return
 
 	End If
+
+	RecLock( 'SA2', .F. )
+
+	cData += PadL( cValToChar( Day( Date() ) ), 2, '0' ) + '/'
+	cData += PadL( cValToChar( Month( Date() ) ), 2, '0' ) + '/'
+	cData += cValToChar( Year( Date() ) )
+
+	SA2->A2_XSITLOG := cTipo + ': ' + oXml:XPathGetNodeValue( '/retorno/dadosretorno/url', .T. ) + cEnter +;
+	'Usuário: ' + SubStr( cUsuario, 7, 15 ) + cEnter +;
+	'Data/Hora: ' + cData + ' - ' + Time()  + cEnter +;
+	Padc('',35,'-')  + cEnter +;
+	SA2->A2_XSITLOG
+
+	MsUnlock()
+
 
 	If oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) == 'site'
 
@@ -288,9 +308,38 @@ User Function CnsCert( cTipo )
 
 		ApMsgStop( oXml:XPathGetNodeValue( '/retorno/dadosretorno/mensagem' ), 'Atenção !!!' )
 
-	ElseIF oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) == '' // Retorno Pendencias
+	ElseIf oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) == 'ok' 
 
-		// Executar aqui ações para o retorno da consulta    
+		ApMsgInfo( oXml:XPathGetNodeValue( '/retorno/dadosretorno/url', .T. ), 'Atenção !!!' )
+
+	ElseIf oXml:XPathGetNodeValue( '/retorno/dadosretorno/status' ) = 'naook'
+
+		If ApMsgYesNo( 'Há Pendencias do tipo ' + cTipo + ' registradas, deseja exibir.', 'Atenção !!!' )
+
+			aList := aClone( StrTokArr2( oXml:XPathGetNodeValue( '/retorno/dadosretorno/mensagem' ), Chr(10), .T. ) ) 
+
+			oSize:AddObject( "LISTA", 000, 000, .T., .T. )
+
+			oSize:Process()
+
+			DEFINE DIALOG oDlg TITLE 'Pendências' FROM;
+			oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
+
+			@oSize:GetDimension("LISTA","LININI"), oSize:GetDimension("LISTA","COLINI");
+			LISTBOX oList Fields HEADER '';
+			SIZE oSize:GetDimension("LISTA","COLEND"), oSize:GetDimension("LISTA","LINEND") OF oDlg PIXEL
+
+			oList:aHeaders := { 'Pendências' }
+
+			oList:SetArray( aList )
+
+			oList:bLine := {|| { aList[oList:nAt] } }
+
+			EnchoiceBar( oDlg, {||Nil}, {||oDlg:End()},,,,,.F.,.F.,.F.,.F.,.F. )
+
+			ACTIVATE DIALOG oDlg CENTERED
+
+		End If
 
 	End If
 
